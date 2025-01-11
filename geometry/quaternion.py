@@ -1,8 +1,9 @@
 import numpy as np
 from vector3d import Vector3d
 
+#TODO dunder methods check from mtex
 class Quaternion:
-    def __init__(self, a=0, b=0, c=0, d=0):
+    def __init__(self, a=None, b=None, c=None, d=None):
         self.a = np.array(a, dtype=float, ndmin=1)      #real part
         self.b = np.array(b, dtype=float, ndmin=1)      #i
         self.c = np.array(c, dtype=float, ndmin=1)      #j
@@ -34,11 +35,39 @@ class Quaternion:
         return self.__sub__(other)
     
     def __mul__(self, other):
-        if isinstance(other, Quaternion):
-            return self.a * other.a + self.b * other.b + self.c * other.c + self.d * other.d
+        from rotation import Rotation
+        from copy import deepcopy
+
+        if np.isscalar(other):
+            return Quaternion(self.a * other, self.b * other, self.c * other, self.d * other)
+        elif isinstance(other, Quaternion):
+            a1, b1 ,c1 , d1 = self.a, self.b, self.c, self.d
+            a2, b2, c2, d2 = other.a, other.b, other.c, other.d
+
+            if not isinstance(other, Rotation):
+                q = deepcopy(self)
+            else:
+                q = deepcopy(other)
+
+            qr = np.array([a2, b2, c2, d2])
+            q.a = np.dot(np.array([a1, -b1, -c1, -d1]),qr)
+            q.b = np.dot(np.array([b1, a1, -d1, c1]), qr)
+            q.c = np.dot(np.array([c1, d1, a1, -b1]), qr)
+            q.d = np.dot(np.array([d1, -c1, b1, a1]), qr)
+
+            if isinstance(q, Rotation):
+                try:
+                    ia = self.i
+                except AttributeError:
+                    ia = np.zeros_like(self.a, dtype=bool)
+
+                try:
+                    ib = other.i
+                except AttributeError:
+                    ib = np.zeros_like(other.a, dtype=bool)
         elif np.isscalar(other):
             return Quaternion(self.a * other, self.b * other, self.c * other, self.d * other)
-        raise TypeError(f"Multiplication of vectors is not possible with {type(other)}")
+        raise TypeError(f"Multiplication of Quaternions is not possible with {type(other)}")
     
     def __rmul__(self, other):
         return self.__mul__(other)

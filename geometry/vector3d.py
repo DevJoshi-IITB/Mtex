@@ -172,7 +172,7 @@ class Vector3d:
     def xy(self):
         return np.column_stack((self.x, self.y))
     
-    def normalize(self, v:'Vector3d'):
+    def normalize(self, v:'Vector3d'=None):
         if v:
             norm = v.norm()
             if np.all(norm > 0):
@@ -429,4 +429,27 @@ class Vector3d:
         theta = v.theta
         rho = v.rho
         return theta, rho, r
+    
+    @staticmethod
+    def rotate_outer(v:'Vector3d',q):
+        from quaternion import Quaternion
+        from rotation import Rotation
+
+        if np.isscalar(q):
+            q = Quaternion.axis2quat(Vector3d.Z,q)
+
+        a, b, c, d = q.abcd()
+        x, y, z = v.xyz()
+        
+        v.x = (a**2 + b**2 - c**2 - d**2)*x + 2*((a*c + b*d)*z +(b*c - a*d)*y)
+        v.y = (a**2 - b**2 + c**2 - d**2)*y + 2*((a*d + b*c)*x +(c*d - a*b)*z)
+        v.z = (a**2 - b**2 - c**2 + d**2)*z + 2*((a*b + c*d)*y +(b*d - a*c)*x)
+
+        if isinstance(q, Rotation):
+            v.x[q.i] = -v.x[q.i]
+            v.y[q.i] = -v.y[q.i]
+            v.z[q.i] = -v.z[q.i]
+
+        return v
+
 

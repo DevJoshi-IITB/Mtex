@@ -1,5 +1,6 @@
 import numpy as np
 from vector3d import Vector3d
+from rotation import Rotation
 
 class SphericalRegion:
     def __init__(self, N=Vector3d(), alpha=[], antipodal=False, vertices:Vector3d=None, max_theta=np.pi, min_theta=0, max_rho=2*np.pi, min_rho=0):
@@ -105,7 +106,10 @@ class SphericalRegion:
         rho = v.rho[self.check_inside(v)]
 
         for i in range(len(self.N)):
-            pass
+            b = Vector3d.by_polar(np.arccos(self.alpha[i]),omega)
+            rot = Rotation.map(Vector3d.Z, self.N[i])
+
+
 
     def rho_min(self):
         return self.rho_range()[0]
